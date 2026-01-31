@@ -279,37 +279,29 @@
     </main>
 
     <script>
-        // Sample logo libraries - using inline SVG data URLs for demo
+        // Logo libraries using actual image files
         const leftLogos = [
-            { id: 'l1', name: 'Apex', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Arial Black, sans-serif" font-size="42" font-weight="900" fill="#1a1a2e">APEX</text></svg>` },
-            { id: 'l2', name: 'Nova', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Georgia, serif" font-size="40" font-style="italic" fill="#2d3436">Nova</text></svg>` },
-            { id: 'l3', name: 'Pulse', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Helvetica, sans-serif" font-size="38" font-weight="300" fill="#e74c3c">PULSE</text></svg>` },
-            { id: 'l4', name: 'Vertex', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Courier New, monospace" font-size="32" fill="#3498db">VERTEX</text></svg>` },
-            { id: 'l5', name: 'Bloom', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Brush Script MT, cursive" font-size="48" fill="#27ae60">Bloom</text></svg>` },
-            { id: 'l6', name: 'Stark', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Impact, sans-serif" font-size="42" fill="#2c3e50">STARK</text></svg>` },
+            { id: 'l1', name: 'Apple', src: 'images/left/apple.png' },
+            { id: 'l2', name: 'Holding Hand', src: 'images/left/holding-hand.png' },
+            { id: 'l3', name: 'What in Field', src: 'images/left/what-in-field.png' },
         ];
 
         const rightLogos = [
-            { id: 'r1', name: 'Labs', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Arial, sans-serif" font-size="36" font-weight="300" fill="#666">labs</text></svg>` },
-            { id: 'r2', name: 'Studio', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Georgia, serif" font-size="32" fill="#444">STUDIO</text></svg>` },
-            { id: 'r3', name: 'Digital', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Helvetica, sans-serif" font-size="30" font-weight="700" fill="#9b59b6">DIGITAL</text></svg>` },
-            { id: 'r4', name: 'Co', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Times New Roman, serif" font-size="38" fill="#1abc9c">Co.</text></svg>` },
-            { id: 'r5', name: 'Creative', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Verdana, sans-serif" font-size="28" fill="#e67e22">creative</text></svg>` },
-            { id: 'r6', name: 'Works', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Trebuchet MS, sans-serif" font-size="34" font-weight="600" fill="#34495e">Works</text></svg>` },
+            { id: 'r1', name: 'Right 1', src: 'images/right/right-1.png' },
+            { id: 'r2', name: 'Right 2', src: 'images/right/right-2.png' },
+            { id: 'r3', name: 'Right 3', src: 'images/right/right-3.png' },
+            { id: 'r4', name: 'Right 4', src: 'images/right/right-4.png' },
+            { id: 'r5', name: 'Right 5', src: 'images/right/right-5.png' },
         ];
 
         let selectedLeft = null;
         let selectedRight = null;
 
-        function svgToDataUrl(svg) {
-            return 'data:image/svg+xml,' + encodeURIComponent(svg);
-        }
-
         function renderLibrary(logos, containerId, side) {
             const container = document.getElementById(containerId);
             container.innerHTML = logos.map(logo => `
                 <div class="library-item" data-id="${logo.id}" onclick="selectLogo('${side}', '${logo.id}')">
-                    <img src="${svgToDataUrl(logo.svg)}" alt="${logo.name}">
+                    <img src="${logo.src}" alt="${logo.name}">
                 </div>
             `).join('');
         }
@@ -328,7 +320,7 @@
             }
 
             // Update preview
-            previewEl.innerHTML = `<img src="${svgToDataUrl(logo.svg)}" alt="${logo.name}">`;
+            previewEl.innerHTML = `<img src="${logo.src}" alt="${logo.name}">`;
             previewEl.classList.remove('empty');
 
             // Update library selection
