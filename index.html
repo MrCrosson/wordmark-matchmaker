@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WordMark Matchmaker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        header {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #00d4ff, #7b2ff7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        header p {
+            color: #8892b0;
+            margin-top: 0.5rem;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .preview-section {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .preview-section h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #ccd6f6;
+            font-weight: 500;
+        }
+
+        .preview-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            min-height: 200px;
+            background: #fff;
+            border-radius: 12px;
+            padding: 2rem;
+        }
+
+        .preview-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 300px;
+            height: 150px;
+        }
+
+        .preview-item img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .preview-item.empty {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .divider {
+            width: 2px;
+            height: 100px;
+            background: linear-gradient(180deg, transparent, #ddd, transparent);
+        }
+
+        .libraries-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .library {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .library h3 {
+            margin-bottom: 1rem;
+            color: #ccd6f6;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .library h3 .badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 400;
+        }
+
+        .library.left h3 .badge {
+            background: rgba(0, 212, 255, 0.2);
+            color: #00d4ff;
+        }
+
+        .library.right h3 .badge {
+            background: rgba(123, 47, 247, 0.2);
+            color: #b388ff;
+        }
+
+        .library-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+
+        .library-item {
+            background: #fff;
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 3px solid transparent;
+            aspect-ratio: 16/9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .library-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .library-item.selected {
+            border-color: #00d4ff;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .library.right .library-item.selected {
+            border-color: #7b2ff7;
+            box-shadow: 0 0 20px rgba(123, 47, 247, 0.3);
+        }
+
+        .library-item img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #00d4ff, #7b2ff7);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        @media (max-width: 768px) {
+            .libraries-section {
+                grid-template-columns: 1fr;
+            }
+
+            .preview-display {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .divider {
+                width: 100px;
+                height: 2px;
+                background: linear-gradient(90deg, transparent, #ddd, transparent);
+            }
+
+            .preview-item {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>WordMark Matchmaker</h1>
+        <p>Mix and match logos to see how they look together</p>
+    </header>
+
+    <main class="main-container">
+        <section class="preview-section">
+            <h2>Preview</h2>
+            <div class="preview-display">
+                <div class="preview-item empty" id="left-preview">
+                    Select a left logo
+                </div>
+                <div class="divider"></div>
+                <div class="preview-item empty" id="right-preview">
+                    Select a right logo
+                </div>
+            </div>
+        </section>
+
+        <section class="libraries-section">
+            <div class="library left">
+                <h3>Left Library <span class="badge">Primary</span></h3>
+                <div class="library-grid" id="left-library"></div>
+            </div>
+            <div class="library right">
+                <h3>Right Library <span class="badge">Secondary</span></h3>
+                <div class="library-grid" id="right-library"></div>
+            </div>
+        </section>
+
+        <div class="actions">
+            <button class="btn btn-secondary" onclick="resetSelection()">Reset</button>
+            <button class="btn btn-primary" onclick="randomPair()">Random Pair</button>
+        </div>
+    </main>
+
+    <script>
+        // Sample logo libraries - using inline SVG data URLs for demo
+        const leftLogos = [
+            { id: 'l1', name: 'Apex', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Arial Black, sans-serif" font-size="42" font-weight="900" fill="#1a1a2e">APEX</text></svg>` },
+            { id: 'l2', name: 'Nova', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Georgia, serif" font-size="40" font-style="italic" fill="#2d3436">Nova</text></svg>` },
+            { id: 'l3', name: 'Pulse', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Helvetica, sans-serif" font-size="38" font-weight="300" fill="#e74c3c">PULSE</text></svg>` },
+            { id: 'l4', name: 'Vertex', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Courier New, monospace" font-size="32" fill="#3498db">VERTEX</text></svg>` },
+            { id: 'l5', name: 'Bloom', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Brush Script MT, cursive" font-size="48" fill="#27ae60">Bloom</text></svg>` },
+            { id: 'l6', name: 'Stark', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Impact, sans-serif" font-size="42" fill="#2c3e50">STARK</text></svg>` },
+        ];
+
+        const rightLogos = [
+            { id: 'r1', name: 'Labs', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Arial, sans-serif" font-size="36" font-weight="300" fill="#666">labs</text></svg>` },
+            { id: 'r2', name: 'Studio', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Georgia, serif" font-size="32" fill="#444">STUDIO</text></svg>` },
+            { id: 'r3', name: 'Digital', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Helvetica, sans-serif" font-size="30" font-weight="700" fill="#9b59b6">DIGITAL</text></svg>` },
+            { id: 'r4', name: 'Co', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Times New Roman, serif" font-size="38" fill="#1abc9c">Co.</text></svg>` },
+            { id: 'r5', name: 'Creative', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Verdana, sans-serif" font-size="28" fill="#e67e22">creative</text></svg>` },
+            { id: 'r6', name: 'Works', svg: `<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg"><text x="10" y="45" font-family="Trebuchet MS, sans-serif" font-size="34" font-weight="600" fill="#34495e">Works</text></svg>` },
+        ];
+
+        let selectedLeft = null;
+        let selectedRight = null;
+
+        function svgToDataUrl(svg) {
+            return 'data:image/svg+xml,' + encodeURIComponent(svg);
+        }
+
+        function renderLibrary(logos, containerId, side) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = logos.map(logo => `
+                <div class="library-item" data-id="${logo.id}" onclick="selectLogo('${side}', '${logo.id}')">
+                    <img src="${svgToDataUrl(logo.svg)}" alt="${logo.name}">
+                </div>
+            `).join('');
+        }
+
+        function selectLogo(side, id) {
+            const logos = side === 'left' ? leftLogos : rightLogos;
+            const logo = logos.find(l => l.id === id);
+            const previewEl = document.getElementById(`${side}-preview`);
+            const libraryEl = document.getElementById(`${side}-library`);
+
+            // Update selection state
+            if (side === 'left') {
+                selectedLeft = logo;
+            } else {
+                selectedRight = logo;
+            }
+
+            // Update preview
+            previewEl.innerHTML = `<img src="${svgToDataUrl(logo.svg)}" alt="${logo.name}">`;
+            previewEl.classList.remove('empty');
+
+            // Update library selection
+            libraryEl.querySelectorAll('.library-item').forEach(item => {
+                item.classList.toggle('selected', item.dataset.id === id);
+            });
+        }
+
+        function resetSelection() {
+            selectedLeft = null;
+            selectedRight = null;
+
+            document.getElementById('left-preview').innerHTML = 'Select a left logo';
+            document.getElementById('left-preview').classList.add('empty');
+            document.getElementById('right-preview').innerHTML = 'Select a right logo';
+            document.getElementById('right-preview').classList.add('empty');
+
+            document.querySelectorAll('.library-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+        }
+
+        function randomPair() {
+            const randomLeft = leftLogos[Math.floor(Math.random() * leftLogos.length)];
+            const randomRight = rightLogos[Math.floor(Math.random() * rightLogos.length)];
+            selectLogo('left', randomLeft.id);
+            selectLogo('right', randomRight.id);
+        }
+
+        // Initialize
+        renderLibrary(leftLogos, 'left-library', 'left');
+        renderLibrary(rightLogos, 'right-library', 'right');
+    </script>
+</body>
+</html>
