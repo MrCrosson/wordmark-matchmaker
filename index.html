@@ -377,7 +377,14 @@
             }
 
             // Update preview
-            previewEl.innerHTML = `<img src="${logo.src}" alt="${logo.name}">`;
+            const img = document.createElement('img');
+            img.src = logo.src;
+            img.alt = logo.name;
+            img.onload = function() {
+                syncHeights();
+            };
+            previewEl.innerHTML = '';
+            previewEl.appendChild(img);
             previewEl.classList.remove('empty');
 
             // Update library selection
@@ -394,6 +401,7 @@
             document.getElementById('left-preview').classList.add('empty');
             document.getElementById('right-preview').innerHTML = 'Select a right logo';
             document.getElementById('right-preview').classList.add('empty');
+            document.getElementById('right-preview').style.height = '';
 
             document.querySelectorAll('.library-item').forEach(item => {
                 item.classList.remove('selected');
@@ -410,6 +418,16 @@
         function updateSpacing(value) {
             document.getElementById('preview-display').style.gap = value + 'px';
             document.getElementById('spacing-value').textContent = value + 'px';
+        }
+
+        function syncHeights() {
+            const leftImg = document.querySelector('#left-preview img');
+            const rightImg = document.querySelector('#right-preview img');
+
+            if (leftImg && rightImg) {
+                rightImg.style.height = leftImg.offsetHeight + 'px';
+                rightImg.style.width = 'auto';
+            }
         }
 
         // Initialize
