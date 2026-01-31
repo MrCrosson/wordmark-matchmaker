@@ -222,6 +222,56 @@
             background: rgba(255, 255, 255, 0.15);
         }
 
+        .spacing-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            color: #ccd6f6;
+            font-size: 0.9rem;
+        }
+
+        .spacing-control input[type="range"] {
+            width: 200px;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .spacing-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #204ce5;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .spacing-control input[type="range"]::-webkit-slider-thumb:hover {
+            background: #527EFF;
+        }
+
+        .spacing-control input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #204ce5;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .spacing-value {
+            min-width: 50px;
+            text-align: center;
+            font-weight: 500;
+        }
+
         @media (max-width: 768px) {
             .libraries-section {
                 grid-template-columns: 1fr;
@@ -253,13 +303,18 @@
     <main class="main-container">
         <section class="preview-section">
             <h2>Preview</h2>
-            <div class="preview-display">
+            <div class="preview-display" id="preview-display">
                 <div class="preview-item empty" id="left-preview">
                     Select a left logo
                 </div>
                 <div class="preview-item empty" id="right-preview">
                     Select a right logo
                 </div>
+            </div>
+            <div class="spacing-control">
+                <span>Spacing:</span>
+                <input type="range" id="spacing-slider" min="0" max="100" value="10" oninput="updateSpacing(this.value)">
+                <span class="spacing-value" id="spacing-value">10px</span>
             </div>
         </section>
 
@@ -350,6 +405,11 @@
             const randomRight = rightLogos[Math.floor(Math.random() * rightLogos.length)];
             selectLogo('left', randomLeft.id);
             selectLogo('right', randomRight.id);
+        }
+
+        function updateSpacing(value) {
+            document.getElementById('preview-display').style.gap = value + 'px';
+            document.getElementById('spacing-value').textContent = value + 'px';
         }
 
         // Initialize
