@@ -118,30 +118,38 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .library h3 {
+        .library-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 1rem;
+        }
+
+        .library h3 {
             color: #ccd6f6;
             font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            margin: 0;
         }
 
-        .library h3 .badge {
-            font-size: 0.75rem;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-weight: 400;
-        }
-
-        .library.left h3 .badge {
+        .add-btn {
             background: rgba(32, 76, 229, 0.2);
             color: #527EFF;
+            border: 1px solid rgba(32, 76, 229, 0.3);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
         }
 
-        .library.right h3 .badge {
-            background: rgba(32, 76, 229, 0.2);
-            color: #527EFF;
+        .add-btn:hover {
+            background: rgba(32, 76, 229, 0.4);
+            border-color: rgba(32, 76, 229, 0.5);
+        }
+
+        .file-input {
+            display: none;
         }
 
         .library-grid {
@@ -320,11 +328,19 @@
 
         <section class="libraries-section">
             <div class="library left">
-                <h3>Left Library</h3>
+                <div class="library-header">
+                    <h3>Left Library</h3>
+                    <button class="add-btn" onclick="document.getElementById('left-upload').click()">+ Add</button>
+                    <input type="file" id="left-upload" class="file-input" accept="image/*" onchange="addImage('left', this)">
+                </div>
                 <div class="library-grid" id="left-library"></div>
             </div>
             <div class="library right">
-                <h3>Right Library</h3>
+                <div class="library-header">
+                    <h3>Right Library</h3>
+                    <button class="add-btn" onclick="document.getElementById('right-upload').click()">+ Add</button>
+                    <input type="file" id="right-upload" class="file-input" accept="image/*" onchange="addImage('right', this)">
+                </div>
                 <div class="library-grid" id="right-library"></div>
             </div>
         </section>
@@ -427,6 +443,29 @@
             if (leftImg && rightImg) {
                 rightImg.style.height = leftImg.offsetHeight + 'px';
                 rightImg.style.width = 'auto';
+            }
+        }
+
+        function addImage(side, input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const logos = side === 'left' ? leftLogos : rightLogos;
+                    const newId = side.charAt(0) + (logos.length + 1);
+                    const newLogo = {
+                        id: newId,
+                        name: file.name.replace(/\.[^/.]+$/, ''),
+                        src: e.target.result
+                    };
+
+                    logos.push(newLogo);
+                    renderLibrary(logos, `${side}-library`, side);
+                };
+
+                reader.readAsDataURL(file);
+                input.value = '';
             }
         }
 
