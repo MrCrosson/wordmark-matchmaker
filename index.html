@@ -369,28 +369,26 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
     <script>
-        // Firebase configuration - REPLACE WITH YOUR CONFIG
+        // Firebase configuration
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyDEz0yR3oaQ_K1h7lHu9XGFmQ4TwGAHpQU",
+            authDomain: "wordmark-matchmaker.firebaseapp.com",
+            projectId: "wordmark-matchmaker",
+            storageBucket: "wordmark-matchmaker.firebasestorage.app",
+            messagingSenderId: "726422507368",
+            appId: "1:726422507368:web:296e9c53416dba908310dd"
         };
 
         // Initialize Firebase
-        let db, storage;
+        let db;
         let firebaseEnabled = false;
 
         try {
             if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
                 firebase.initializeApp(firebaseConfig);
                 db = firebase.firestore();
-                storage = firebase.storage();
                 firebaseEnabled = true;
             }
         } catch (e) {
@@ -431,7 +429,7 @@
                 leftSnapshot.forEach(doc => {
                     const data = doc.data();
                     if (!leftLogos.find(l => l.id === doc.id)) {
-                        leftLogos.push({ id: doc.id, name: data.name, src: data.url });
+                        leftLogos.push({ id: doc.id, name: data.name, src: data.imageData });
                     }
                 });
 
@@ -440,7 +438,7 @@
                 rightSnapshot.forEach(doc => {
                     const data = doc.data();
                     if (!rightLogos.find(l => l.id === doc.id)) {
-                        rightLogos.push({ id: doc.id, name: data.name, src: data.url });
+                        rightLogos.push({ id: doc.id, name: data.name, src: data.imageData });
                     }
                 });
             } catch (e) {
@@ -539,58 +537,58 @@
             btn.textContent = 'Uploading...';
 
             try {
-                if (firebaseEnabled) {
-                    // Upload to Firebase Storage
-                    const fileName = `${side}/${Date.now()}_${file.name}`;
-                    const storageRef = storage.ref(fileName);
-                    await storageRef.put(file);
-                    const url = await storageRef.getDownloadURL();
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const imageData = e.target.result;
+                    const logoName = file.name.replace(/\.[^/.]+$/, '');
 
-                    // Save metadata to Firestore
-                    const docRef = await db.collection('logos').add({
-                        name: file.name.replace(/\.[^/.]+$/, ''),
-                        url: url,
-                        side: side,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
+                    if (firebaseEnabled) {
+                        // Save to Firestore with base64 image data
+                        const docRef = await db.collection('logos').add({
+                            name: logoName,
+                            imageData: imageData,
+                            side: side,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
 
-                    const newLogo = {
-                        id: docRef.id,
-                        name: file.name.replace(/\.[^/.]+$/, ''),
-                        src: url
-                    };
+                        const newLogo = {
+                            id: docRef.id,
+                            name: logoName,
+                            src: imageData
+                        };
 
-                    if (side === 'left') {
-                        leftLogos.push(newLogo);
-                        renderLibrary(leftLogos, 'left-library', 'left');
+                        if (side === 'left') {
+                            leftLogos.push(newLogo);
+                            renderLibrary(leftLogos, 'left-library', 'left');
+                        } else {
+                            rightLogos.push(newLogo);
+                            renderLibrary(rightLogos, 'right-library', 'right');
+                        }
                     } else {
-                        rightLogos.push(newLogo);
-                        renderLibrary(rightLogos, 'right-library', 'right');
-                    }
-                } else {
-                    // Fallback to local (session only)
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
+                        // Fallback to local (session only)
                         const logos = side === 'left' ? leftLogos : rightLogos;
                         const newId = side.charAt(0) + Date.now();
                         const newLogo = {
                             id: newId,
-                            name: file.name.replace(/\.[^/.]+$/, ''),
-                            src: e.target.result
+                            name: logoName,
+                            src: imageData
                         };
 
                         logos.push(newLogo);
                         renderLibrary(logos, `${side}-library`, side);
-                    };
-                    reader.readAsDataURL(file);
-                }
+                    }
+
+                    btn.disabled = false;
+                    btn.textContent = '+ Add';
+                };
+                reader.readAsDataURL(file);
             } catch (e) {
                 console.error('Error uploading image:', e);
                 alert('Error uploading image. Please try again.');
+                btn.disabled = false;
+                btn.textContent = '+ Add';
             }
 
-            btn.disabled = false;
-            btn.textContent = '+ Add';
             input.value = '';
         }
 
