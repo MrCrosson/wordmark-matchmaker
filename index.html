@@ -423,20 +423,9 @@
             console.log('Firebase not configured, using local storage fallback');
         }
 
-        // Default logos (bundled with the site)
-        const defaultLeftLogos = [
-            { id: 'l1', name: 'Apple', src: 'images/left/apple.png', isDefault: true },
-            { id: 'l2', name: 'Holding Hand', src: 'images/left/holding-hand.png', isDefault: true },
-            { id: 'l3', name: 'What in Field', src: 'images/left/what-in-field.png', isDefault: true },
-        ];
-
-        const defaultRightLogos = [
-            { id: 'r1', name: 'Right 1', src: 'images/right/right-1.png', isDefault: true },
-            { id: 'r2', name: 'Right 2', src: 'images/right/right-2.png', isDefault: true },
-            { id: 'r3', name: 'Right 3', src: 'images/right/right-3.png', isDefault: true },
-            { id: 'r4', name: 'Right 4', src: 'images/right/right-4.png', isDefault: true },
-            { id: 'r5', name: 'Right 5', src: 'images/right/right-5.png', isDefault: true },
-        ];
+        // Default logos (empty - users will add their own)
+        const defaultLeftLogos = [];
+        const defaultRightLogos = [];
 
         let leftLogos = [...defaultLeftLogos];
         let rightLogos = [...defaultRightLogos];
