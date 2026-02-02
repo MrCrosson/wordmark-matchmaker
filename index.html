@@ -153,6 +153,28 @@
             cursor: not-allowed;
         }
 
+        .delete-btn {
+            background: rgba(229, 62, 62, 0.2);
+            color: #fc8181;
+            border: 1px solid rgba(229, 62, 62, 0.3);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .delete-btn:hover {
+            background: rgba(229, 62, 62, 0.4);
+            border-color: rgba(229, 62, 62, 0.5);
+        }
+
+        .library-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
         .file-input {
             display: none;
         }
@@ -341,7 +363,10 @@
             <div class="library left">
                 <div class="library-header">
                     <h3>Left Library</h3>
-                    <button class="add-btn" id="left-add-btn" onclick="document.getElementById('left-upload').click()">+ Add</button>
+                    <div class="library-actions">
+                        <button class="add-btn" id="left-add-btn" onclick="document.getElementById('left-upload').click()">+ Add</button>
+                        <button class="delete-btn" onclick="clearLibrary('left')">Clear</button>
+                    </div>
                     <input type="file" id="left-upload" class="file-input" accept="image/*" onchange="addImage('left', this)">
                 </div>
                 <div class="library-grid" id="left-library">
@@ -351,7 +376,10 @@
             <div class="library right">
                 <div class="library-header">
                     <h3>Right Library</h3>
-                    <button class="add-btn" id="right-add-btn" onclick="document.getElementById('right-upload').click()">+ Add</button>
+                    <div class="library-actions">
+                        <button class="add-btn" id="right-add-btn" onclick="document.getElementById('right-upload').click()">+ Add</button>
+                        <button class="delete-btn" onclick="clearLibrary('right')">Clear</button>
+                    </div>
                     <input type="file" id="right-upload" class="file-input" accept="image/*" onchange="addImage('right', this)">
                 </div>
                 <div class="library-grid" id="right-library">
@@ -590,6 +618,39 @@
             }
 
             input.value = '';
+        }
+
+        async function clearLibrary(side) {
+            if (!confirm(`Are you sure you want to clear the ${side} library? This will delete all uploaded images.`)) {
+                return;
+            }
+
+            try {
+                if (firebaseEnabled) {
+                    // Delete all documents for this side from Firestore
+                    const snapshot = await db.collection('logos').where('side', '==', side).get();
+                    const batch = db.batch();
+                    snapshot.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    await batch.commit();
+                }
+
+                // Reset to default logos
+                if (side === 'left') {
+                    leftLogos = [...defaultLeftLogos];
+                    renderLibrary(leftLogos, 'left-library', 'left');
+                } else {
+                    rightLogos = [...defaultRightLogos];
+                    renderLibrary(rightLogos, 'right-library', 'right');
+                }
+
+                // Reset selection if it was from cleared library
+                resetSelection();
+            } catch (e) {
+                console.error('Error clearing library:', e);
+                alert('Error clearing library. Please try again.');
+            }
         }
 
         // Initialize
