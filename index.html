@@ -148,6 +148,11 @@
             border-color: rgba(32, 76, 229, 0.5);
         }
 
+        .add-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .file-input {
             display: none;
         }
@@ -280,6 +285,12 @@
             font-weight: 500;
         }
 
+        .loading {
+            text-align: center;
+            color: #a0aec0;
+            padding: 2rem;
+        }
+
         @media (max-width: 768px) {
             .libraries-section {
                 grid-template-columns: 1fr;
@@ -330,18 +341,22 @@
             <div class="library left">
                 <div class="library-header">
                     <h3>Left Library</h3>
-                    <button class="add-btn" onclick="document.getElementById('left-upload').click()">+ Add</button>
+                    <button class="add-btn" id="left-add-btn" onclick="document.getElementById('left-upload').click()">+ Add</button>
                     <input type="file" id="left-upload" class="file-input" accept="image/*" onchange="addImage('left', this)">
                 </div>
-                <div class="library-grid" id="left-library"></div>
+                <div class="library-grid" id="left-library">
+                    <div class="loading">Loading...</div>
+                </div>
             </div>
             <div class="library right">
                 <div class="library-header">
                     <h3>Right Library</h3>
-                    <button class="add-btn" onclick="document.getElementById('right-upload').click()">+ Add</button>
+                    <button class="add-btn" id="right-add-btn" onclick="document.getElementById('right-upload').click()">+ Add</button>
                     <input type="file" id="right-upload" class="file-input" accept="image/*" onchange="addImage('right', this)">
                 </div>
-                <div class="library-grid" id="right-library"></div>
+                <div class="library-grid" id="right-library">
+                    <div class="loading">Loading...</div>
+                </div>
             </div>
         </section>
 
@@ -351,27 +366,97 @@
         </div>
     </main>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+
     <script>
-        // Logo libraries using actual image files
-        const leftLogos = [
-            { id: 'l1', name: 'Apple', src: 'images/left/apple.png' },
-            { id: 'l2', name: 'Holding Hand', src: 'images/left/holding-hand.png' },
-            { id: 'l3', name: 'What in Field', src: 'images/left/what-in-field.png' },
+        // Firebase configuration - REPLACE WITH YOUR CONFIG
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        let db, storage;
+        let firebaseEnabled = false;
+
+        try {
+            if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                storage = firebase.storage();
+                firebaseEnabled = true;
+            }
+        } catch (e) {
+            console.log('Firebase not configured, using local storage fallback');
+        }
+
+        // Default logos (bundled with the site)
+        const defaultLeftLogos = [
+            { id: 'l1', name: 'Apple', src: 'images/left/apple.png', isDefault: true },
+            { id: 'l2', name: 'Holding Hand', src: 'images/left/holding-hand.png', isDefault: true },
+            { id: 'l3', name: 'What in Field', src: 'images/left/what-in-field.png', isDefault: true },
         ];
 
-        const rightLogos = [
-            { id: 'r1', name: 'Right 1', src: 'images/right/right-1.png' },
-            { id: 'r2', name: 'Right 2', src: 'images/right/right-2.png' },
-            { id: 'r3', name: 'Right 3', src: 'images/right/right-3.png' },
-            { id: 'r4', name: 'Right 4', src: 'images/right/right-4.png' },
-            { id: 'r5', name: 'Right 5', src: 'images/right/right-5.png' },
+        const defaultRightLogos = [
+            { id: 'r1', name: 'Right 1', src: 'images/right/right-1.png', isDefault: true },
+            { id: 'r2', name: 'Right 2', src: 'images/right/right-2.png', isDefault: true },
+            { id: 'r3', name: 'Right 3', src: 'images/right/right-3.png', isDefault: true },
+            { id: 'r4', name: 'Right 4', src: 'images/right/right-4.png', isDefault: true },
+            { id: 'r5', name: 'Right 5', src: 'images/right/right-5.png', isDefault: true },
         ];
 
+        let leftLogos = [...defaultLeftLogos];
+        let rightLogos = [...defaultRightLogos];
         let selectedLeft = null;
         let selectedRight = null;
 
+        // Load logos from Firebase
+        async function loadLogos() {
+            if (!firebaseEnabled) {
+                renderLibrary(leftLogos, 'left-library', 'left');
+                renderLibrary(rightLogos, 'right-library', 'right');
+                return;
+            }
+
+            try {
+                // Load left logos
+                const leftSnapshot = await db.collection('logos').where('side', '==', 'left').get();
+                leftSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (!leftLogos.find(l => l.id === doc.id)) {
+                        leftLogos.push({ id: doc.id, name: data.name, src: data.url });
+                    }
+                });
+
+                // Load right logos
+                const rightSnapshot = await db.collection('logos').where('side', '==', 'right').get();
+                rightSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (!rightLogos.find(l => l.id === doc.id)) {
+                        rightLogos.push({ id: doc.id, name: data.name, src: data.url });
+                    }
+                });
+            } catch (e) {
+                console.error('Error loading logos:', e);
+            }
+
+            renderLibrary(leftLogos, 'left-library', 'left');
+            renderLibrary(rightLogos, 'right-library', 'right');
+        }
+
         function renderLibrary(logos, containerId, side) {
             const container = document.getElementById(containerId);
+            if (logos.length === 0) {
+                container.innerHTML = '<div class="loading">No images yet</div>';
+                return;
+            }
             container.innerHTML = logos.map(logo => `
                 <div class="library-item" data-id="${logo.id}" onclick="selectLogo('${side}', '${logo.id}')">
                     <img src="${logo.src}" alt="${logo.name}">
@@ -385,14 +470,12 @@
             const previewEl = document.getElementById(`${side}-preview`);
             const libraryEl = document.getElementById(`${side}-library`);
 
-            // Update selection state
             if (side === 'left') {
                 selectedLeft = logo;
             } else {
                 selectedRight = logo;
             }
 
-            // Update preview
             const img = document.createElement('img');
             img.src = logo.src;
             img.alt = logo.name;
@@ -403,7 +486,6 @@
             previewEl.appendChild(img);
             previewEl.classList.remove('empty');
 
-            // Update library selection
             libraryEl.querySelectorAll('.library-item').forEach(item => {
                 item.classList.toggle('selected', item.dataset.id === id);
             });
@@ -425,10 +507,12 @@
         }
 
         function randomPair() {
-            const randomLeft = leftLogos[Math.floor(Math.random() * leftLogos.length)];
-            const randomRight = rightLogos[Math.floor(Math.random() * rightLogos.length)];
-            selectLogo('left', randomLeft.id);
-            selectLogo('right', randomRight.id);
+            if (leftLogos.length > 0 && rightLogos.length > 0) {
+                const randomLeft = leftLogos[Math.floor(Math.random() * leftLogos.length)];
+                const randomRight = rightLogos[Math.floor(Math.random() * rightLogos.length)];
+                selectLogo('left', randomLeft.id);
+                selectLogo('right', randomRight.id);
+            }
         }
 
         function updateSpacing(value) {
@@ -446,32 +530,72 @@
             }
         }
 
-        function addImage(side, input) {
-            if (input.files && input.files[0]) {
-                const file = input.files[0];
-                const reader = new FileReader();
+        async function addImage(side, input) {
+            if (!input.files || !input.files[0]) return;
 
-                reader.onload = function(e) {
-                    const logos = side === 'left' ? leftLogos : rightLogos;
-                    const newId = side.charAt(0) + (logos.length + 1);
-                    const newLogo = {
-                        id: newId,
+            const file = input.files[0];
+            const btn = document.getElementById(`${side}-add-btn`);
+            btn.disabled = true;
+            btn.textContent = 'Uploading...';
+
+            try {
+                if (firebaseEnabled) {
+                    // Upload to Firebase Storage
+                    const fileName = `${side}/${Date.now()}_${file.name}`;
+                    const storageRef = storage.ref(fileName);
+                    await storageRef.put(file);
+                    const url = await storageRef.getDownloadURL();
+
+                    // Save metadata to Firestore
+                    const docRef = await db.collection('logos').add({
                         name: file.name.replace(/\.[^/.]+$/, ''),
-                        src: e.target.result
+                        url: url,
+                        side: side,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    const newLogo = {
+                        id: docRef.id,
+                        name: file.name.replace(/\.[^/.]+$/, ''),
+                        src: url
                     };
 
-                    logos.push(newLogo);
-                    renderLibrary(logos, `${side}-library`, side);
-                };
+                    if (side === 'left') {
+                        leftLogos.push(newLogo);
+                        renderLibrary(leftLogos, 'left-library', 'left');
+                    } else {
+                        rightLogos.push(newLogo);
+                        renderLibrary(rightLogos, 'right-library', 'right');
+                    }
+                } else {
+                    // Fallback to local (session only)
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const logos = side === 'left' ? leftLogos : rightLogos;
+                        const newId = side.charAt(0) + Date.now();
+                        const newLogo = {
+                            id: newId,
+                            name: file.name.replace(/\.[^/.]+$/, ''),
+                            src: e.target.result
+                        };
 
-                reader.readAsDataURL(file);
-                input.value = '';
+                        logos.push(newLogo);
+                        renderLibrary(logos, `${side}-library`, side);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            } catch (e) {
+                console.error('Error uploading image:', e);
+                alert('Error uploading image. Please try again.');
             }
+
+            btn.disabled = false;
+            btn.textContent = '+ Add';
+            input.value = '';
         }
 
         // Initialize
-        renderLibrary(leftLogos, 'left-library', 'left');
-        renderLibrary(rightLogos, 'right-library', 'right');
+        loadLogos();
     </script>
 </body>
 </html>
